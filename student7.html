@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>نظام اختبار الطالب</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body{
+  margin:0;
+  font-family:Tahoma;
+  direction:rtl;
+  background:#eef5ff;
+}
+.container{
+  max-width:600px;
+  margin:auto;
+  padding:15px;
+}
+.card{
+  background:white;
+  border-radius:15px;
+  padding:20px;
+  margin-top:15px;
+  box-shadow:0 5px 15px rgba(0,0,0,.1);
+}
+h2{text-align:center;color:#2c3e50}
+input,select{
+  width:100%;
+  padding:10px;
+  margin:8px 0;
+  border-radius:10px;
+  border:1px solid #ccc;
+  font-size:15px;
+  box-sizing:border-box;
+}
+button{
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:12px;
+  background:#27ae60;
+  color:white;
+  font-size:16px;
+  cursor:pointer;
+  margin-top:10px;
+}
+button.secondary{
+  background:#3498db;
+}
+button.warning{
+  background:#e74c3c;
+}
+.question{
+  margin:20px 0;
+  padding:15px;
+  border:1px solid #eee;
+  border-radius:10px;
+}
+.option{
+  display:block;
+  margin:10px 0;
+  padding:10px;
+  border-radius:8px;
+  cursor:pointer;
+  transition:background 0.3s;
+}
+.option:hover{
+  background:#f8f9fa;
+}
+.option input{
+  width:auto;
+  margin-left:10px;
+}
+.result{
+  text-align:center;
+  font-size:18px;
+}
+.error{
+  color:#e74c3c;
+  background:#ffebee;
+  padding:10px;
+  border-radius:8px;
+  margin:10px 0;
+  text-align:center;
+  display:none;
+}
+.success{
+  color:#27ae60;
+  background:#e8f5e9;
+  padding:10px;
+  border-radius:8px;
+  margin:10px 0;
+  text-align:center;
+}
+.timer{
+  position:fixed;
+  top:15px;
+  left:15px;
+  background:#2c3e50;
+  color:white;
+  padding:10px 15px;
+  border-radius:20px;
+  font-weight:bold;
+  font-size:14px;
+  z-index:1000;
+}
+.loading{
+  text-align:center;
+  padding:20px;
+  color:#666;
+}
+.exam-info-box {
+  background:#f8f9fa;
+  padding:15px;
+  border-radius:10px;
+  margin:15px 0;
+  border-right:5px solid #3498db;
+}
+.info-row {
+  display:flex;
+  justify-content:space-between;
+  margin:8px 0;
+  padding:5px 0;
+  border-bottom:1px dashed #ddd;
+}
+.info-label {
+  font-weight:bold;
+  color:#2c3e50;
+}
+.info-value {
+  color:#27ae60;
+  font-weight:bold;
+}
+.time-warning {
+  color:#e74c3c;
+  animation:pulse 1.5s infinite;
+}
+@keyframes pulse {
+  0% {opacity:1;}
+  50% {opacity:0.6;}
+  100% {opacity:1;}
+}
+.question-tag {
+  display:inline-block;
+  background:#3498db;
+  color:white;
+  padding:3px 10px;
+  border-radius:15px;
+  font-size:12px;
+  margin:0 5px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="timer" id="timer" style="display:none"></div>
+
+<div class="container">
+  <h2 id="pageTitle">دخول الاختبار</h2>
+  
+  <div class="card" id="loginCard">
+    <h3>👤 معلومات الطالب</h3>
+    <label>اسم الطالب</label>
+    <input type="text" id="studentName" placeholder="اكتب اسمك الكامل">
+    
+    <div id="examSelection">
+      <h3>📚 اختيار الاختبار</h3>
+      <label>اختر المادة</label>
+      <select id="subjectSelect">
+        <option value="">-- اختر المادة --</option>
+      </select>
+      
+      <label>اختر الموضوع</label>
+      <select id="topicSelect">
+        <option value="">-- اختر الموضوع --</option>
+      </select>
+    </div>
+    
+    <div id="examInfo" style="display:none" class="exam-info-box">
+      <h4>📋 معلومات الاختبار</h4>
+      <div class="info-row">
+        <span class="info-label">اسم الاختبار:</span>
+        <span class="info-value" id="infoExamName"></span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">عدد الأسئلة:</span>
+        <span class="info-value" id="infoQuestionCount"></span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">نوع الأسئلة:</span>
+        <span class="info-value" id="infoQuestionType"></span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">مدة الاختبار:</span>
+        <span class="info-value" id="infoDuration"></span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">تاريخ النشر:</span>
+        <span class="info-value" id="infoDate"></span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">وقت البدء:</span>
+        <span class="info-value" id="infoStartTime"></span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">وقت الانتهاء:</span>
+        <span class="info-value" id="infoEndTime"></span>
+      </div>
+    </div>
+    
+    <label>🔐 كلمة مرور الاختبار</label>
+    <input type="password" id="examPassword" placeholder="أدخل كلمة المرور التي أعطاها المعلم">
+    
+    <div id="loginError" class="error"></div>
+    
+    <button onclick="startExam()">▶ بدء الاختبار</button>
+    
+    <div style="text-align:center; margin-top:20px; color:#666; font-size:14px;">
+      <p>💡 تأكد من:</p>
+      <p>1. اتصال الإنترنت مستقر</p>
+      <p>2. عدم إغلاق الصفحة أثناء الاختبار</p>
+      <p>3. ادخال كلمة المرور الصحيحة من المعلم</p>
+    </div>
+  </div>
+  
+  <div class="card" id="examCard" style="display:none">
+    <div id="examHeader">
+      <h3 id="examTitle"></h3>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+        <span id="questionProgress"></span>
+        <span id="remainingTime" style="background:#e74c3c; color:white; padding:5px 10px; border-radius:15px;"></span>
+      </div>
+      <div style="background:#f8f9fa; padding:10px; border-radius:10px; margin-bottom:15px;">
+        <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+          <span>عدد الأسئلة: <strong id="totalQuestionsCount"></strong></span>
+          <span>تم الإجابة: <strong id="answeredCount">0</strong></span>
+          <span>الوقت المتبقي: <strong id="timeRemainingText"></strong></span>
+          <span>المدة: <strong id="examDurationText"></strong> دقيقة</span>
+        </div>
+        <div style="margin-top:10px; display:flex; gap:5px; flex-wrap:wrap;">
+          <span class="question-tag">اختيار متعدد</span>
+          <span class="question-tag" style="background:#27ae60">أسئلة المعلم</span>
+          <span class="question-tag" style="background:#9b59b6">التوقيت: <span id="currentTimeDisplay"></span></span>
+        </div>
+      </div>
+    </div>
+    
+    <div id="examContent"></div>
+    
+    <div id="examNav" style="display:flex; gap:10px;">
+      <button class="secondary" onclick="previousQuestion()">◀ السابق</button>
+      <button class="secondary" onclick="nextQuestion()">التالي ▶</button>
+      <button onclick="submitExam()">✅ إنهاء الاختبار</button>
+    </div>
+    
+    <div style="margin-top:20px; text-align:center;">
+      <button class="warning" onclick="showConfirmExit()">🚪 إنهاء الاختبار والخروج</button>
+    </div>
+  </div>
+  
+  <div class="card" id="resultCard" style="display:none">
+    <div id="resultContent"></div>
+  </div>
+</div>
+
+<!-- نافذة تأكيد الخروج -->
+<div id="confirmModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:2000;">
+  <div style="background:white; max-width:400px; margin:100px auto; padding:20px; border-radius:15px; text-align:center;">
+    <h3>⚠️ تأكيد إنهاء الاختبار</h3>
+    <p>هل أنت متأكد من إنهاء الاختبار والخروج؟</p>
+    <p>سيتم حفظ إجاباتك حتى الآن.</p>
+    <div style="display:flex; gap:10px; margin-top:20px;">
+      <button class="secondary" onclick="hideConfirmModal()">❌ إلغاء</button>
+      <button class="warning" onclick="confirmExitExam()">✅ نعم، إنهاء الاختبار</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// بيانات التطبيق
+let currentExam = null;
+let studentName = "";
+let studentAnswers = {};
+let allQuestions = [];
+let currentQuestionIndex = 0;
+let examStartTime = null;
+let examEndTime = null;
+let examDuration = 0;
+let timerInterval = null;
+let timeInterval = null;
+let examQuestions = [];
+let publishedExams = [];
+let answeredCount = 0;
+
+// عناصر DOM
+const elements = {
+  loginCard: document.getElementById('loginCard'),
+  examCard: document.getElementById('examCard'),
+  resultCard: document.getElementById('resultCard'),
+  subjectSelect: document.getElementById('subjectSelect'),
+  topicSelect: document.getElementById('topicSelect'),
+  studentName: document.getElementById('studentName'),
+  examPassword: document.getElementById('examPassword'),
+  loginError: document.getElementById('loginError'),
+  examContent: document.getElementById('examContent'),
+  resultContent: document.getElementById('resultContent'),
+  timer: document.getElementById('timer'),
+  examTitle: document.getElementById('examTitle'),
+  questionProgress: document.getElementById('questionProgress'),
+  remainingTime: document.getElementById('remainingTime'),
+  examInfo: document.getElementById('examInfo'),
+  infoExamName: document.getElementById('infoExamName'),
+  infoQuestionCount: document.getElementById('infoQuestionCount'),
+  infoQuestionType: document.getElementById('infoQuestionType'),
+  infoDuration: document.getElementById('infoDuration'),
+  infoDate: document.getElementById('infoDate'),
+  infoStartTime: document.getElementById('infoStartTime'),
+  infoEndTime: document.getElementById('infoEndTime'),
+  pageTitle: document.getElementById('pageTitle'),
+  totalQuestionsCount: document.getElementById('totalQuestionsCount'),
+  answeredCount: document.getElementById('answeredCount'),
+  timeRemainingText: document.getElementById('timeRemainingText'),
+  examDurationText: document.getElementById('examDurationText'),
+  currentTimeDisplay: document.getElementById('currentTimeDisplay'),
+  confirmModal: document.getElementById('confirmModal')
+};
+
+// جلب البيانات من نسخة المعلم
+function getTeacherData() {
+  try {
+    // جلب الاختبارات المنشورة
+    publishedExams = JSON.parse(localStorage.getItem('publishedExams')) || [];
+    console.log('الاختبارات المنشورة:', publishedExams);
+    
+    // جلب جميع الأسئلة
+    const loadedQuestions = JSON.parse(localStorage.getItem('questions')) || [];
+    console.log('الأسئلة المتاحة:', loadedQuestions.length);
+    
+    // تعيين المتغير العام
+    allQuestions = loadedQuestions;
+    
+    return { publishedExams, allQuestions: loadedQuestions };
+  } catch (error) {
+    console.error('خطأ في جلب البيانات:', error);
+    publishedExams = [];
+    allQuestions = [];
+    return { publishedExams: [], allQuestions: [] };
+  }
+}
+
+// تحميل المواد المتاحة
+function loadSubjects() {
+  getTeacherData();
+  
+  // حفظ القيمة المحددة حالياً
+  const currentSubject = elements.subjectSelect.value;
+  
+  elements.subjectSelect.innerHTML = '<option value="">-- اختر المادة --</option>';
+  
+  if (publishedExams.length === 0) {
+    elements.loginError.textContent = '⚠️ لا توجد اختبارات منشورة حالياً. يرجى التواصل مع المعلم.';
+    elements.loginError.style.display = 'block';
+    return;
+  }
+  
+  // استخراج المواد الفريدة
+  const uniqueSubjects = [...new Set(publishedExams.map(exam => exam.subject))];
+  
+  uniqueSubjects.forEach(subject => {
+    const option = document.createElement('option');
+    option.value = subject;
+    option.textContent = subject;
+    elements.subjectSelect.appendChild(option);
+  });
+  
+  // إعادة تعيين القيمة المختارة إذا كانت موجودة
+  if (currentSubject && uniqueSubjects.includes(currentSubject)) {
+    elements.subjectSelect.value = currentSubject;
+    // تحميل المواضيع للمادة المختارة
+    loadTopics();
+  }
+  
+  elements.loginError.style.display = 'none';
+}
+
+// تحميل المواضيع بناءً على المادة المختارة
+function loadTopics() {
+  const selectedSubject = elements.subjectSelect.value;
+  
+  // حفظ القيمة المحددة حالياً
+  const currentTopic = elements.topicSelect.value;
+  
+  elements.topicSelect.innerHTML = '<option value="">-- اختر الموضوع --</option>';
+  elements.examInfo.style.display = 'none';
+  
+  if (!selectedSubject) return;
+  
+  // تصفية الاختبارات حسب المادة
+  const filteredExams = publishedExams.filter(exam => exam.subject === selectedSubject);
+  
+  filteredExams.forEach(exam => {
+    const option = document.createElement('option');
+    option.value = exam.topic;
+    option.textContent = exam.topic;
+    elements.topicSelect.appendChild(option);
+  });
+  
+  // إعادة تعيين القيمة المختارة إذا كانت موجودة
+  if (currentTopic && filteredExams.some(exam => exam.topic === currentTopic)) {
+    elements.topicSelect.value = currentTopic;
+    // تحميل معلومات الاختبار
+    loadExamInfo();
+  }
+}
+
+// تحميل معلومات الاختبار عند اختيار الموضوع
+function loadExamInfo() {
+  const selectedSubject = elements.subjectSelect.value;
+  const selectedTopic = elements.topicSelect.value;
+  
+  if (!selectedTopic) {
+    elements.examInfo.style.display = 'none';
+    return;
+  }
+  
+  // البحث عن الاختبار المحدد
+  const exam = publishedExams.find(e => 
+    e.subject === selectedSubject && e.topic === selectedTopic
+  );
+  
+  if (exam) {
+    elements.examInfo.style.display = 'block';
+    elements.infoExamName.textContent = `${exam.subject} - ${exam.topic}`;
+    
+    // حساب عدد الأسئلة المختارة من المعلم
+    let questionCount = 0;
+    let questionType = "جميع أسئلة المادة";
+    
+    if (exam.selectedQuestions && Array.isArray(exam.selectedQuestions) && exam.selectedQuestions.length > 0) {
+      questionCount = exam.selectedQuestions.length;
+      questionType = "أسئلة مختارة من المعلم";
+    } else if (exam.questionIds && Array.isArray(exam.questionIds) && exam.questionIds.length > 0) {
+      questionCount = exam.questionIds.length;
+      questionType = "أسئلة محددة";
+    } else if (exam.questionCount) {
+      questionCount = exam.questionCount;
+      questionType = "عدد محدد من الأسئلة";
+    } else {
+      // إذا لم توجد أسئلة محددة، نحسب عدد أسئلة المادة والموضوع
+      const examQuestions = allQuestions.filter(q => 
+        q.subject === selectedSubject && q.topic === selectedTopic
+      );
+      questionCount = examQuestions.length;
+      questionType = "جميع أسئلة الموضوع";
+    }
+    
+    elements.infoQuestionCount.textContent = questionCount + ' سؤال';
+    elements.infoQuestionType.textContent = questionType;
+    
+    // معلومات إضافية - تأكد من وجود المدة
+    const duration = exam.duration || exam.examDuration || exam.timeLimit || 60;
+    elements.infoDuration.textContent = duration + ' دقيقة';
+    elements.infoDate.textContent = exam.publishDate || exam.creationDate || 'غير محدد';
+    
+    // حساب أوقات البدء والانتهاء
+    const now = new Date();
+    const startTime = exam.startTime || now.toLocaleString('ar-SA');
+    elements.infoStartTime.textContent = startTime;
+    
+    if (exam.endTime) {
+      elements.infoEndTime.textContent = exam.endTime;
+    } else if (duration) {
+      const endTime = new Date(now.getTime() + (duration * 60000));
+      elements.infoEndTime.textContent = endTime.toLocaleString('ar-SA');
+    } else {
+      elements.infoEndTime.textContent = 'غير محدد';
+    }
+  }
+}
+
+// بدء الاختبار
+function startExam() {
+  // جمع البيانات المدخلة
+  studentName = elements.studentName.value.trim();
+  const selectedSubject = elements.subjectSelect.value;
+  const selectedTopic = elements.topicSelect.value;
+  const password = elements.examPassword.value;
+  
+  // التحقق من البيانات
+  if (!studentName) {
+    showError('يرجى إدخال اسم الطالب');
+    return;
+  }
+  
+  if (!selectedSubject || !selectedTopic) {
+    showError('يرجى اختيار المادة والموضوع');
+    return;
+  }
+  
+  if (!password) {
+    showError('يرجى إدخال كلمة مرور الاختبار');
+    return;
+  }
+  
+  // البحث عن الاختبار المطابق
+  currentExam = publishedExams.find(exam => 
+    exam.subject === selectedSubject && 
+    exam.topic === selectedTopic
+  );
+  
+  if (!currentExam) {
+    showError('الاختبار غير موجود. يرجى اختيار اختبار آخر.');
+    return;
+  }
+  
+  // التحقق من كلمة المرور
+  if (currentExam.password !== password) {
+    showError('كلمة المرور غير صحيحة. يرجى التأكد من كلمة المرور من المعلم.');
+    return;
+  }
+  
+  // جلب الأسئلة المختارة من قبل المعلم
+  examQuestions = [];
+  
+  if (currentExam.selectedQuestions && Array.isArray(currentExam.selectedQuestions) && currentExam.selectedQuestions.length > 0) {
+    // استخدام الأسئلة المختارة من قبل المعلم
+    console.log('الأسئلة المختارة من المعلم:', currentExam.selectedQuestions);
+    
+    // فلترة الأسئلة بناءً على الـ IDs المختارة
+    examQuestions = allQuestions.filter(q => {
+      // البحث عن السؤال باستخدام الـ ID
+      return currentExam.selectedQuestions.includes(q.id) || 
+             currentExam.selectedQuestions.includes(q.id.toString());
+    });
+    
+    console.log('الأسئلة المفلترة:', examQuestions.length, 'من', currentExam.selectedQuestions.length);
+    
+    // إذا لم نجد كل الأسئلة، نحاول البحث باستخدام النص
+    if (examQuestions.length < currentExam.selectedQuestions.length && examQuestions.length < currentExam.selectedQuestions.length) {
+      console.log('محاولة البحث عن الأسئلة المفقودة...');
+      
+      // نبحث عن الأسئلة بناءً على نص السؤال (إذا كان المعلم حفظ النص)
+      allQuestions.forEach(q => {
+        if (!examQuestions.some(eq => eq.id === q.id)) {
+          // تحقق إذا كان نص السؤال موجود في الأسئلة المختارة
+          if (currentExam.selectedQuestions.some(sq => {
+            if (typeof sq === 'object' && sq.text) {
+              return sq.text === q.text;
+            }
+            return false;
+          })) {
+            examQuestions.push(q);
+          }
+        }
+      });
+    }
+  } else if (currentExam.questionIds && Array.isArray(currentExam.questionIds) && currentExam.questionIds.length > 0) {
+    // استخدام الأسئلة من خلال questionIds (للتوافق مع النسخ القديمة)
+    examQuestions = allQuestions.filter(q => 
+      currentExam.questionIds.includes(q.id)
+    );
+  } else if (currentExam.questionCount) {
+    // إذا كان هناك عدد محدد من الأسئلة، نأخذ عشوائياً
+    const subjectQuestions = allQuestions.filter(q => 
+      q.subject === selectedSubject && q.topic === selectedTopic
+    );
+    
+    // نأخذ عدداً عشوائياً من الأسئلة
+    if (subjectQuestions.length > currentExam.questionCount) {
+      // خلط الأسئلة عشوائياً
+      const shuffled = [...subjectQuestions].sort(() => 0.5 - Math.random());
+      examQuestions = shuffled.slice(0, currentExam.questionCount);
+    } else {
+      examQuestions = subjectQuestions;
+    }
+  } else {
+    // إذا لم توجد أسئلة محددة، نستخدم جميع أسئلة المادة والموضوع
+    examQuestions = allQuestions.filter(q => 
+      q.subject === selectedSubject && q.topic === selectedTopic
+    );
+  }
+  
+  if (examQuestions.length === 0) {
+    showError('لا توجد أسئلة لهذا الاختبار. يرجى التواصل مع المعلم.');
+    return;
+  }
+  
+  // تسجيل عدد الأسئلة الفعلي في بيانات الاختبار (مهم)
+  currentExam.actualQuestionCount = examQuestions.length;
+  
+  // تهيئة بيانات الاختبار
+  studentAnswers = {};
+  answeredCount = 0;
+  currentQuestionIndex = 0;
+  examStartTime = new Date();
+  
+  // تحديد مدة الاختبار - مع وجود قيم افتراضية
+  examDuration = currentExam.duration || currentExam.examDuration || currentExam.timeLimit || 60;
+  
+  // حساب وقت انتهاء الاختبار
+  examEndTime = new Date(examStartTime.getTime() + (examDuration * 60000));
+  
+  // تحديث واجهة المستخدم
+  elements.totalQuestionsCount.textContent = examQuestions.length;
+  elements.answeredCount.textContent = '0';
+  elements.examDurationText.textContent = examDuration;
+  
+  // إخفاء شاشة الدخول وإظهار الاختبار
+  elements.loginCard.style.display = 'none';
+  elements.examCard.style.display = 'block';
+  elements.pageTitle.textContent = 'الاختبار - جاري الإجابة';
+  elements.examTitle.textContent = `${currentExam.subject} - ${currentExam.topic}`;
+  
+  // بدء المؤقت والتوقيت
+  startTimer();
+  startCurrentTimeDisplay();
+  
+  // عرض السؤال الأول
+  renderQuestion();
+}
+
+// عرض توقيت حالي
+function startCurrentTimeDisplay() {
+  if (timeInterval) clearInterval(timeInterval);
+  
+  timeInterval = setInterval(() => {
+    const now = new Date();
+    elements.currentTimeDisplay.textContent = now.toLocaleTimeString('ar-SA');
+  }, 1000);
+}
+
+// عرض سؤال معين
+function renderQuestion() {
+  if (examQuestions.length === 0) return;
+  
+  const question = examQuestions[currentQuestionIndex];
+  const questionNumber = currentQuestionIndex + 1;
+  const totalQuestions = examQuestions.length;
+  
+  // تحديث شريط التقدم
+  elements.questionProgress.textContent = `السؤال ${questionNumber} من ${totalQuestions}`;
+  
+  // التحقق إذا كان هناك إجابة مسجلة لهذا السؤال
+  const hasAnswer = studentAnswers[question.id] !== undefined;
+  
+  // بناء واجهة السؤال
+  let optionsHtml = '';
+  
+  // تأكد من وجود خيارات
+  const options = question.options || question.o || [];
+  
+  options.forEach((option, index) => {
+    const isChecked = studentAnswers[question.id] === index;
+    optionsHtml += `
+      <label class="option" onclick="selectOption(${question.id}, ${index})" style="background: ${isChecked ? '#e8f5e9' : 'transparent'};">
+        <input type="radio" name="q${question.id}" value="${index}" ${isChecked ? 'checked' : ''} 
+               onchange="saveAnswer(${question.id}, ${index})">
+        ${option}
+      </label>
+    `;
+  });
+  
+  elements.examContent.innerHTML = `
+    <div class="question">
+      <h4>${question.text || question.q}</h4>
+      ${question.image ? `<img src="${question.image}" style="max-width:100%; border-radius:10px; margin:10px 0;">` : ''}
+      <div style="color:#666; margin-bottom:15px;">
+        ${hasAnswer ? '✅ تمت الإجابة على هذا السؤال' : '⚠️ لم تتم الإجابة بعد'}
+      </div>
+      <div id="optionsContainer">
+        ${optionsHtml}
+      </div>
+    </div>
+  `;
+  
+  // تحديث أزرار التنقل
+  updateNavButtons();
+}
+
+// حفظ الإجابة
+function saveAnswer(questionId, optionIndex) {
+  // التحقق إذا كانت هذه أول إجابة لهذا السؤال
+  const isNewAnswer = studentAnswers[questionId] === undefined;
+  
+  studentAnswers[questionId] = optionIndex;
+  
+  // تحديث عدد الإجابات
+  if (isNewAnswer) {
+    answeredCount++;
+    elements.answeredCount.textContent = answeredCount;
+  }
+  
+  // تحديث الواجهة
+  const options = document.querySelectorAll(`input[name="q${questionId}"]`);
+  options.forEach((option, index) => {
+    const label = option.parentElement;
+    label.style.background = index === optionIndex ? '#e8f5e9' : 'transparent';
+  });
+}
+
+// اختيار خيار
+function selectOption(questionId, optionIndex) {
+  const radio = document.querySelector(`input[name="q${questionId}"][value="${optionIndex}"]`);
+  if (radio) {
+    radio.checked = true;
+    saveAnswer(questionId, optionIndex);
+  }
+}
+
+// السؤال السابق
+function previousQuestion() {
+  if (currentQuestionIndex > 0) {
+    currentQuestionIndex--;
+    renderQuestion();
+  }
+}
+
+// السؤال التالي
+function nextQuestion() {
+  if (currentQuestionIndex < examQuestions.length - 1) {
+    currentQuestionIndex++;
+    renderQuestion();
+  }
+}
+
+// تحديث أزرار التنقل
+function updateNavButtons() {
+  const buttons = document.querySelectorAll('#examNav button');
+  
+  // السابق
+  buttons[0].disabled = currentQuestionIndex === 0;
+  buttons[0].style.opacity = currentQuestionIndex === 0 ? '0.5' : '1';
+  
+  // التالي
+  buttons[1].disabled = currentQuestionIndex === examQuestions.length - 1;
+  buttons[1].style.opacity = currentQuestionIndex === examQuestions.length - 1 ? '0.5' : '1';
+}
+
+// بدء المؤقت
+function startTimer() {
+  let timeLeft = examDuration * 60; // تحويل إلى ثواني
+  
+  elements.timer.style.display = 'block';
+  
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      if (timeInterval) clearInterval(timeInterval);
+      submitExam(true); // إرسال تلقائي بسبب انتهاء الوقت
+      return;
+    }
+    
+    const minutes = Math.floor(timeLeft / 60);
+    const seconds = timeLeft % 60;
+    
+    const timeText = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    elements.timer.textContent = `⏰ ${timeText}`;
+    elements.remainingTime.textContent = timeText;
+    elements.timeRemainingText.textContent = timeText;
+    
+    // تغيير اللون عند اقتراب النهاية
+    if (timeLeft < 300) { // أقل من 5 دقائق
+      elements.timer.style.background = '#e74c3c';
+      elements.remainingTime.style.background = '#e74c3c';
+      elements.timeRemainingText.className = 'time-warning';
+    } else if (timeLeft < 600) { // أقل من 10 دقائق
+      elements.timer.style.background = '#f39c12';
+      elements.remainingTime.style.background = '#f39c12';
+      elements.timeRemainingText.className = '';
+    } else {
+      elements.timer.style.background = '#2c3e50';
+      elements.remainingTime.style.background = '#3498db';
+      elements.timeRemainingText.className = '';
+    }
+  }, 1000);
+}
+
+// إنهاء الاختبار
+function submitExam(isTimeUp = false) {
+  if (timerInterval) clearInterval(timerInterval);
+  if (timeInterval) clearInterval(timeInterval);
+  
+  elements.timer.style.display = 'none';
+  
+  // حساب النتيجة
+  let score = 0;
+  examQuestions.forEach(question => {
+    const studentAnswer = studentAnswers[question.id];
+    const correctAnswer = question.correctAnswer !== undefined ? question.correctAnswer : question.a;
+    
+    if (studentAnswer !== undefined && studentAnswer === correctAnswer) {
+      score++;
+    }
+  });
+  
+  // حساب الوقت المستغرق
+  const endTime = new Date();
+  const timeTakenMinutes = Math.round((endTime - examStartTime) / 60000);
+  const timeTakenSeconds = Math.round((endTime - examStartTime) / 1000);
+  
+  // حفظ النتيجة
+  saveResult(score, timeTakenMinutes, timeTakenSeconds);
+  
+  // عرض النتيجة
+  showResult(score, isTimeUp, timeTakenMinutes, timeTakenSeconds);
+}
+
+// حفظ النتيجة
+function saveResult(score, timeTakenMinutes, timeTakenSeconds) {
+  try {
+    const results = JSON.parse(localStorage.getItem('studentResults')) || [];
+    
+    const result = {
+      id: Date.now(),
+      studentName: studentName,
+      studentId: generateStudentId(),
+      examId: currentExam.id,
+      examName: `${currentExam.subject} - ${currentExam.topic}`,
+      examDuration: examDuration,
+      selectedQuestionsCount: currentExam.selectedQuestions ? currentExam.selectedQuestions.length : 0,
+      actualQuestionsCount: examQuestions.length,
+      score: score,
+      total: examQuestions.length,
+      percentage: Math.round((score / examQuestions.length) * 100),
+      date: new Date().toLocaleString('ar-SA'),
+      startTime: examStartTime.toLocaleString('ar-SA'),
+      endTime: new Date().toLocaleString('ar-SA'),
+      timeTakenMinutes: timeTakenMinutes,
+      timeTakenSeconds: timeTakenSeconds,
+      answeredCount: answeredCount,
+      unansweredCount: examQuestions.length - answeredCount,
+      answers: studentAnswers,
+      isTimeUp: timeTakenMinutes >= examDuration
+    };
+    
+    results.push(result);
+    localStorage.setItem('studentResults', JSON.stringify(results));
+    
+    console.log('تم حفظ النتيجة:', result);
+  } catch (error) {
+    console.error('خطأ في حفظ النتيجة:', error);
+  }
+}
+
+// إنشاء معرف للطالب
+function generateStudentId() {
+  return 'STU-' + Date.now().toString(36).toUpperCase();
+}
+
+// عرض النتيجة
+function showResult(score, isTimeUp = false, timeTakenMinutes = 0, timeTakenSeconds = 0) {
+  const totalQuestions = examQuestions.length;
+  const percentage = Math.round((score / totalQuestions) * 100);
+  const selectedCount = currentExam.selectedQuestions ? currentExam.selectedQuestions.length : totalQuestions;
+  
+  // تحديد التقييم
+  let evaluation = '';
+  let color = '#27ae60';
+  
+  if (percentage >= 90) {
+    evaluation = 'ممتاز 🎉';
+    color = '#27ae60';
+  } else if (percentage >= 80) {
+    evaluation = 'جيد جداً 👍';
+    color = '#2ecc71';
+  } else if (percentage >= 70) {
+    evaluation = 'جيد 👌';
+    color = '#3498db';
+  } else if (percentage >= 60) {
+    evaluation = 'مقبول ✅';
+    color = '#f39c12';
+  } else {
+    evaluation = 'يحتاج تحسين 📚';
+    color = '#e74c3c';
+  }
+  
+  // تنسيق الوقت المستغرق
+  const timeTakenText = timeTakenMinutes > 0 ? 
+    `${timeTakenMinutes} دقيقة و ${timeTakenSeconds % 60} ثانية` : 
+    `${timeTakenSeconds} ثانية`;
+  
+  // عرض النتيجة
+  elements.examCard.style.display = 'none';
+  elements.resultCard.style.display = 'block';
+  elements.pageTitle.textContent = 'نتيجة الاختبار';
+  
+  let timeMessage = '';
+  if (isTimeUp) {
+    timeMessage = '<div class="error" style="margin:15px 0;">⏰ انتهى وقت الاختبار تلقائياً</div>';
+  }
+  
+  elements.resultContent.innerHTML = `
+    <div class="result">
+      <h3 style="color:${color};">🎓 نتيجة الاختبار</h3>
+      <div style="background:#f8f9fa; padding:20px; border-radius:15px; margin:20px 0;">
+        <div class="info-row">
+          <span class="info-label">الطالب:</span>
+          <span class="info-value">${studentName}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">الاختبار:</span>
+          <span class="info-value">${currentExam.subject} - ${currentExam.topic}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">المدة المحددة:</span>
+          <span class="info-value">${examDuration} دقيقة</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">الوقت المستغرق:</span>
+          <span class="info-value">${timeTakenText}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">الأسئلة المختارة:</span>
+          <span class="info-value">${selectedCount} سؤال</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">الأسئلة المعروضة:</span>
+          <span class="info-value">${totalQuestions} سؤال</span>
+        </div>
+        <hr style="margin:20px 0;">
+        <div style="font-size:36px; font-weight:bold; color:${color}; text-align:center;">
+          ${score} / ${totalQuestions}
+        </div>
+        <div style="font-size:28px; margin:10px 0; text-align:center;">
+          النسبة: ${percentage}%
+        </div>
+        <div style="font-size:24px; color:${color}; margin:15px 0; text-align:center;">
+          ${evaluation}
+        </div>
+        <div style="display:flex; justify-content:space-around; margin-top:20px;">
+          <div style="text-align:center;">
+            <div style="font-size:18px; color:#27ae60;">✅ تم الإجابة</div>
+            <div style="font-size:24px; font-weight:bold;">${answeredCount}</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-size:18px; color:#e74c3c;">❌ لم يتم الإجابة</div>
+            <div style="font-size:24px; font-weight:bold;">${totalQuestions - answeredCount}</div>
+          </div>
+        </div>
+      </div>
+      ${timeMessage}
+      
+      <h4>📊 تفاصيل الإجابات (${totalQuestions} سؤال)</h4>
+      <div style="max-height:300px; overflow-y:auto; text-align:right; padding:10px;">
+        ${examQuestions.map((q, index) => {
+          const studentAnswer = studentAnswers[q.id];
+          const correctAnswer = q.correctAnswer !== undefined ? q.correctAnswer : q.a;
+          const isCorrect = studentAnswer === correctAnswer;
+          const hasAnswer = studentAnswer !== undefined;
+          const options = q.options || q.o || [];
+          
+          return `
+            <div style="margin:10px 0; padding:15px; border-radius:8px; background:${isCorrect ? '#e8f5e9' : hasAnswer ? '#ffebee' : '#f8f9fa'}">
+              <p><strong>س ${index + 1}:</strong> ${q.text || q.q}</p>
+              <p><strong>إجابتك:</strong> ${hasAnswer ? options[studentAnswer] : 'لم تجب'}</p>
+              <p><strong>الإجابة الصحيحة:</strong> ${options[correctAnswer]}</p>
+              <p style="color:${isCorrect ? '#27ae60' : hasAnswer ? '#e74c3c' : '#f39c12'}">
+                ${isCorrect ? '✅ إجابة صحيحة' : hasAnswer ? '❌ إجابة خاطئة' : '⚠️ لم تتم الإجابة'}
+              </p>
+            </div>
+          `;
+        }).join('')}
+      </div>
+      
+      <div style="margin-top:30px; display:flex; gap:10px; justify-content:center;">
+        <button class="secondary" onclick="printResult()">🖨️ طباعة النتيجة</button>
+        <button onclick="restartExam()">🔄 اختبار جديد</button>
+      </div>
+      
+      <div style="margin-top:20px; font-size:14px; color:#666; text-align:center;">
+        <p>📝 ملاحظة: تم حفظ النتيجة تلقائياً. يمكن للمعلم الاطلاع عليها.</p>
+        <p>⏱️ المدة المحددة: ${examDuration} دقيقة | الوقت الفعلي: ${timeTakenText}</p>
+        <p>📊 الأسئلة: ${selectedCount} مختارة | ${totalQuestions} معروضة</p>
+      </div>
+    </div>
+  `;
+}
+
+// طباعة النتيجة
+function printResult() {
+  const printContent = elements.resultContent.innerHTML;
+  const originalContent = document.body.innerHTML;
+  
+  document.body.innerHTML = `
+    <div dir="rtl" style="padding:20px; font-family:Tahoma;">
+      <h2 style="text-align:center;">نتيجة الاختبار</h2>
+      ${printContent}
+    </div>
+  `;
+  
+  window.print();
+  document.body.innerHTML = originalContent;
+  window.location.reload();
+}
+
+// بدء اختبار جديد
+function restartExam() {
+  // إعادة تعيين البيانات
+  currentExam = null;
+  studentAnswers = {};
+  examQuestions = [];
+  currentQuestionIndex = 0;
+  answeredCount = 0;
+  
+  if (timerInterval) clearInterval(timerInterval);
+  if (timeInterval) clearInterval(timeInterval);
+  
+  // إعادة تعيين النموذج
+  elements.studentName.value = '';
+  elements.subjectSelect.value = '';
+  elements.topicSelect.value = '';
+  elements.examPassword.value = '';
+  elements.examInfo.style.display = 'none';
+  
+  // إعادة تحميل المواد
+  loadSubjects();
+  
+  // عرض شاشة الدخول
+  elements.resultCard.style.display = 'none';
+  elements.loginCard.style.display = 'block';
+  elements.pageTitle.textContent = 'دخول الاختبار';
+  window.scrollTo(0, 0);
+}
+
+// عرض رسالة خطأ
+function showError(message) {
+  elements.loginError.textContent = message;
+  elements.loginError.style.display = 'block';
+  elements.loginError.scrollIntoView({ behavior: 'smooth' });
+}
+
+// إظهار نافذة تأكيد الخروج
+function showConfirmExit() {
+  elements.confirmModal.style.display = 'block';
+}
+
+// إخفاء نافذة تأكيد الخروج
+function hideConfirmModal() {
+  elements.confirmModal.style.display = 'none';
+}
+
+// تأكيد إنهاء الاختبار
+function confirmExitExam() {
+  hideConfirmModal();
+  submitExam();
+}
+
+// ربط أحداث القوائم المنسدلة
+elements.subjectSelect.addEventListener('change', loadTopics);
+elements.topicSelect.addEventListener('change', loadExamInfo);
+
+// تهيئة التطبيق عند التحميل
+window.addEventListener('DOMContentLoaded', () => {
+  loadSubjects();
+  
+  // إضافة تفاعل للاسم
+  elements.studentName.addEventListener('input', () => {
+    if (elements.loginError.style.display === 'block') {
+      elements.loginError.style.display = 'none';
+    }
+  });
+});
+
+// السماح باستخدام Enter للدخول
+document.addEventListener('keypress', (e) => {
+  if (e.key === 'Enter' && elements.loginCard.style.display !== 'none') {
+    startExam();
+  }
+});
+
+// منع المغادرة أثناء الاختبار
+window.addEventListener('beforeunload', (e) => {
+  if (elements.examCard.style.display !== 'none') {
+    e.preventDefault();
+    e.returnValue = 'هل أنت متأكد أنك تريد المغادرة؟ ستفقد إجابات الاختبار!';
+    return e.returnValue;
+  }
+});
+</script>
+</body>
+</html>
